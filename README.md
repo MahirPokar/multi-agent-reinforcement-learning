@@ -39,7 +39,7 @@ The core evaluation environment is **Level-Based Foraging (LBF)**: a cooperative
 - Multi-agent joint-action tabular can work in a simplified setting, but storage grows fast (state/action blow-up).
 
 <p align="center">
-  <img src="assets/fig8_tabular_training.png" width="820" alt="Figure 8: Tabular Q-learning training curves (single-agent and multi-agent)" />
+  <img src="assets/fig8_tabular_training.jpeg" width="820" alt="Figure 8: Tabular Q-learning training curves (single-agent and multi-agent)" />
 </p>
 
 ---
@@ -48,7 +48,7 @@ The core evaluation environment is **Level-Based Foraging (LBF)**: a cooperative
 The straightforward “replace the Q-table with a network” approach fails to converge in this MARL setting.
 
 <p align="center">
-  <img src="assets/fig9_naive_dqn.png" width="820" alt="Figure 9: Naïve DQN training results" />
+  <img src="assets/fig9_naive_dqn.jpeg" width="820" alt="Figure 9: Naïve DQN training results" />
 </p>
 
 ---
@@ -57,13 +57,13 @@ The straightforward “replace the Q-table with a network” approach fails to c
 Adding the classic DQN stabilisation tricks yields strong learning in the mixed cooperative scenario.
 
 <p align="center">
-  <img src="assets/fig10_dqn_replay_target.png" width="820" alt="Figure 10: DQN with target network + replay buffer (mixed cooperative)" />
+  <img src="assets/fig10_dqn_replay_target.jpeg" width="820" alt="Figure 10: DQN with target network + replay buffer (mixed cooperative)" />
 </p>
 
 Also observed: **high sensitivity to learning rate** — an unsuitable LR can cause collapse / local minima.
 
 <p align="center">
-  <img src="assets/fig11_lr_sensitivity.png" width="820" alt="Figure 11: Training instability for lr=0.005" />
+  <img src="assets/fig11_lr_sensitivity.jpeg" width="820" alt="Figure 11: Training instability for lr=0.005" />
 </p>
 
 ---
@@ -72,13 +72,13 @@ Also observed: **high sensitivity to learning rate** — an unsuitable LR can ca
 When agents must cooperate *every time* (no communication, decentralised training/execution), learning fails with sparse rewards:
 
 <p align="center">
-  <img src="assets/fig12_forced_coop_no_shaping.png" width="820" alt="Figure 12: Forced cooperation without reward shaping" />
+  <img src="assets/fig12_forced_coop_no_shaping.jpeg" width="820" alt="Figure 12: Forced cooperation without reward shaping" />
 </p>
 
 Reward shaping can make it work (but it’s heuristic-heavy and not robust):
 
 <p align="center">
-  <img src="assets/fig13_forced_coop_with_shaping.png" width="820" alt="Figure 13: Forced cooperation with reward shaping" />
+  <img src="assets/fig13_forced_coop_with_shaping.jpeg" width="820" alt="Figure 13: Forced cooperation with reward shaping" />
 </p>
 
 ---
@@ -91,7 +91,7 @@ Agents can collect an item only if they stand adjacent to it and the **sum of co
 This environment is a useful abstraction for **distributed robotics** tasks (e.g., multiple robots coordinating to pick, carry, or complete missions).
 
 <p align="center">
-  <img src="assets/fig7_lbf_render.png" width="650" alt="Figure 7: LBF render (2 agents, 2 items)" />
+  <img src="assets/fig7_lbf_render.jpeg" width="650" alt="Figure 7: LBF render (2 agents, 2 items)" />
 </p>
 
 ---
