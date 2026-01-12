@@ -1,6 +1,10 @@
 # Third Year Project Git Repository
 <p align="center">Applicaiton of Q-learning to Level-based Foraging Environment </p> 
 
+<p align="center">
+  <img src="assets/demo.gif" width="850" alt="10-second demo of autonomous search & retrieval" />
+</p>
+
 <!-- TABLE OF CONTENTS -->
 <h1> Table of Contents </h1>
 
