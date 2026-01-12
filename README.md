@@ -1,40 +1,147 @@
-# Third Year Project Git Repository
-<p align="center">Applicaiton of Q-learning to Level-based Foraging Environment </p> 
+# Multi-Agent Reinforcement Learning (Q-learning → DQN) on Level-Based Foraging
+
+> A practical, from-scratch exploration of **multi-agent Q-learning** and **Deep Q-Networks (DQN)** in a cooperative grid-world, highlighting **non-stationarity**, **scalability limits**, and why **independent value-based agents struggle in fully cooperative tasks without communication**.
 
 <p align="center">
-  <img src="assets/demo.gif" width="850" alt="10-second demo of autonomous search & retrieval" />
+  <img src="assets/demo.gif" width="820" alt="Demo: two agents learning to collect items in Level-Based Foraging" />
 </p>
 
-<!-- TABLE OF CONTENTS -->
-<h1> Table of Contents </h1>
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.7%2B-blue">
+  <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-used-red">
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-green">
+</p>
 
-- [Environments](#Environments)
-- [Tabular Q-learning](#TAB)
-- [Deep Q-learning](#DEEP)
-- [Known Issues and Bugs](#BUG)
+---
 
+## What this project is
 
+This repo contains my **third-year individual project** on applying **Q-learning-based multi-agent reinforcement learning** to cooperative environments.
 
+I implement and compare:
 
-<!-- Environments-->
-# Environments
-This project implements three different Q-learning algorithms. The Environment for the tabular methods are Implemented by myself. However for deep RL methods, the [Level-based Foraging environment](https://github.com/semitable/lb-foraging) created by Filippos Christianos was used. 
- The environment is provided under MIT [License](./LICENSE).It is recommended to first install the environment from the link provided above, and then test the algorithms seperately. It is recommended to clone the enviroment git repository in a python virtual environment with python version 3.7 or older. Then this git can be cloned executed. The [requirements](/requirements.txt) file provide the required python modules. 
+- **Tabular Q-learning**
+  - Single-agent baseline (custom toy grid env)
+  - Multi-agent **joint-action** tabular Q-learning (custom env)
+- **Deep Q-learning**
+  - Naïve independent DQN (fails to learn reliably)
+  - **DQN + target network + experience replay** (stabilises learning)
+  - Forced-cooperation setting + **reward shaping** (works, but brittle)
 
-<!-- TAB-->
-# Tabular Q-learning 
-The [Single Agent case](./IMPLEMENTATIONS/Tabular.py) and the [multi agent case](./MPLEMENTATIONS/Tabular_multi.py) both store the action values in a python dictionary object, with states acting as keys. For the single agent case each state has a list of 4 action values. In the multi agent case each state has a list of 16 action values, as a joint policy is implemented. The [util](/IMPLEMENTATIONS/util.py) file provides the code for ploting the results. 
+The core evaluation environment is **Level-Based Foraging (LBF)**: a cooperative task where agents must combine their “levels” to collect higher-level items.
 
-<!-- DEEP-->
-# Deep Q-learning
-The neural networks and deep learning techniques are implemented using [pytorch](https://pytorch.org). The pytorch website provides details for easy installation and usage documentation.
+---
 
-The [naive approach](./IMPLEMENTATIONS/Naive_deep_Q_learning.py) implements a very similar algorithm to the tabular case, however two seperate neural networks are used to represent the Q functions for each agent, and the update target is then used to compute the gradient to optimise the nueral network. However this approach does not converge. However its still included as a stepping stone. 
+## Key results (what matters)
 
-The [DQN agent](/IMPLEMENTATIONS/DQN_agent.py)  fixes the convergence issues by implementing a replay buffer and a target network for each agent. The [ENV_AGENT](/IMPLEMENTATIONS/ENV_AGENT.pyIMPLEMENTATIONS) files defines the Linear deep network class and the replay buffer class for improved readability. The raw results received from the environment are stored in a CSV file. 
+### 1) Tabular Q-learning works… until the state/action space explodes
+- Single-agent tabular learns efficiently in a small grid.
+- Multi-agent joint-action tabular can work in a simplified setting, but storage grows fast (state/action blow-up).
 
-To change the environment to a forced_coop settings, the authors recommend declaring a new environment as described in their [documentation](https://github.com/semitable/lb-foraging), however this can also be done by explicitely changing the forced_coop boolean value in the environment source code. The [DQN agent with reward shaping](/IMPLEMENTATIONS/DQN_forced_coop.py) is able to successfully learn how to act in under the forced cooperation contraint. 
+<p align="center">
+  <img src="assets/fig8_tabular_training.png" width="820" alt="Figure 8: Tabular Q-learning training curves (single-agent and multi-agent)" />
+</p>
 
-<!-- BUG-->
-# Known Issues 
-1. The requirements file neeeds to be updated to remove unecessary requirements. 
+---
+
+### 2) Naïve independent DQN is unstable (moving target + correlated samples)
+The straightforward “replace the Q-table with a network” approach fails to converge in this MARL setting.
+
+<p align="center">
+  <img src="assets/fig9_naive_dqn.png" width="820" alt="Figure 9: Naïve DQN training results" />
+</p>
+
+---
+
+### 3) DQN + target network + replay buffer learns in mixed-cooperative LBF
+Adding the classic DQN stabilisation tricks yields strong learning in the mixed cooperative scenario.
+
+<p align="center">
+  <img src="assets/fig10_dqn_replay_target.png" width="820" alt="Figure 10: DQN with target network + replay buffer (mixed cooperative)" />
+</p>
+
+Also observed: **high sensitivity to learning rate** — an unsuitable LR can cause collapse / local minima.
+
+<p align="center">
+  <img src="assets/fig11_lr_sensitivity.png" width="820" alt="Figure 11: Training instability for lr=0.005" />
+</p>
+
+---
+
+### 4) Fully cooperative (forced cooperation) breaks independent DQN — unless you “hand-hold” with reward shaping
+When agents must cooperate *every time* (no communication, decentralised training/execution), learning fails with sparse rewards:
+
+<p align="center">
+  <img src="assets/fig12_forced_coop_no_shaping.png" width="820" alt="Figure 12: Forced cooperation without reward shaping" />
+</p>
+
+Reward shaping can make it work (but it’s heuristic-heavy and not robust):
+
+<p align="center">
+  <img src="assets/fig13_forced_coop_with_shaping.png" width="820" alt="Figure 13: Forced cooperation with reward shaping" />
+</p>
+
+---
+
+## Environment: Level-Based Foraging (LBF)
+
+LBF is a grid-world with **n agents** and **m items**, each with a **level**.
+Agents can collect an item only if they stand adjacent to it and the **sum of cooperating agent levels ≥ item level**.
+
+This environment is a useful abstraction for **distributed robotics** tasks (e.g., multiple robots coordinating to pick, carry, or complete missions).
+
+<p align="center">
+  <img src="assets/fig7_lbf_render.png" width="650" alt="Figure 7: LBF render (2 agents, 2 items)" />
+</p>
+
+---
+
+## Methods (high-level)
+
+### Tabular Q-learning (custom envs)
+- Stores action-values in a Python dictionary keyed by state.
+- Single-agent: 4 actions `{up, down, left, right}`.
+- Multi-agent: joint-action policy with 16 action pairs (4×4).
+
+### Deep Q-learning (PyTorch)
+- Naïve DQN: independent networks per agent, bootstrapping on the same network → unstable.
+- DQN improvements:
+  - **Target network** to reduce moving-target instability
+  - **Replay buffer** to de-correlate samples
+  - Epsilon-greedy exploration with decay
+- Forced cooperation:
+  - Sparse reward makes learning collapse
+  - Reward shaping used to encourage agents to stay close and coordinate
+
+---
+
+## Repo structure
+
+- `IMPLEMENTATIONS/`
+  - `Tabular.py` — tabular Q-learning (single + multi-agent joint-action)
+  - `DQN_agent.py` — DQN with replay buffer + target network
+  - `DQN_forced_coop.py` — forced cooperation experiments (+ reward shaping)
+  - *(helper modules for network, replay buffer, plotting, CSV logging)*
+- `assets/` — images/gifs used by this README
+- `requirements.txt` — python dependencies (note: may contain extra packages)
+
+---
+
+## Quickstart (local)
+
+> Notes:
+> - The LBF environment is typically easiest to run in a **Python 3.7 (or older) virtual environment**.
+> - Install the LBF environment first, then run the scripts in this repo.
+
+```bash
+# 1) Create and activate a venv (example)
+python3.7 -m venv .venv
+source .venv/bin/activate
+
+# 2) Install dependencies
+pip install -r requirements.txt
+
+# 3) Run implementations (examples)
+python IMPLEMENTATIONS/Tabular.py
+python IMPLEMENTATIONS/DQN_agent.py
+python IMPLEMENTATIONS/DQN_forced_coop.py
